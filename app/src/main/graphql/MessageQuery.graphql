@@ -1,0 +1,5 @@
+query MessageQuery($input: String!) {
+    message(input: $input) {
+        body
+    }
+}

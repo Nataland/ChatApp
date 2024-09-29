@@ -3,6 +3,9 @@ plugins {
     alias(libs.plugins.kotlin.android)
     id("kotlin-kapt")
     id("com.google.dagger.hilt.android")
+    id("com.apollographql.apollo")
+    alias(libs.plugins.kotlin.compose)
+    id("org.jetbrains.kotlin.plugin.serialization")
 }
 
 android {
@@ -53,7 +56,11 @@ android {
 
 dependencies {
     implementation("com.google.dagger:hilt-android:2.51.1")
+    implementation("com.apollographql.apollo:apollo-runtime:4.0.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.2")
     kapt("com.google.dagger:hilt-compiler:2.51.1")
+    implementation("androidx.hilt:hilt-navigation-compose:1.2.0")
+    implementation(libs.androidx.navigation)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
@@ -69,6 +76,12 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
+}
+
+apollo {
+    service("service") {
+        packageName.set("com.nataland")
+    }
 }
 
 kapt {
