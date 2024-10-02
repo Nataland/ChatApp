@@ -4,32 +4,42 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.nataland.chatapp.network.ChatRepository
 import com.nataland.chatapp.network.Result
+import com.nataland.chatapp.picker.Cat
+import com.nataland.chatapp.picker.CatInfo
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+
 enum class ChatArrangement {
     Start, End
 }
 
 sealed class Message(open val content: String, val arrangement: ChatArrangement) {
-    data class Self(override val content: String) : Message(content, arrangement = ChatArrangement.End)
-    data class Server(override val content: String) : Message(content, arrangement = ChatArrangement.Start)
-    data class Error(override val content: String) : Message(content, arrangement = ChatArrangement.Start)
+    data class Self(override val content: String) :
+        Message(content, arrangement = ChatArrangement.End)
+
+    data class Server(override val content: String) :
+        Message(content, arrangement = ChatArrangement.Start)
+
+    data class Error(override val content: String) :
+        Message(content, arrangement = ChatArrangement.Start)
     // Todo: implement loading
 }
 
-data class HomeScreenState(
+data class MeowGPTState(
     val messages: List<Message> = emptyList(),
+    val cat: Cat = Cat.Bobby,
+    val catAction: String = ""
 )
 
 @HiltViewModel
 class MeowGPTViewModel @Inject constructor(
-    private val chatRepository: ChatRepository
+    private val chatRepository: ChatRepository,
 ) : ViewModel() {
-    private val _uiState = MutableStateFlow(HomeScreenState())
+    private val _uiState = MutableStateFlow(MeowGPTState())
     val uiState = _uiState.asStateFlow()
 
     fun sendMessage(input: String) {
@@ -48,6 +58,16 @@ class MeowGPTViewModel @Inject constructor(
                     )
                 )
             }
+        }
+    }
+
+    fun setCat(cat: Cat) {
+        if (cat != _uiState.value.cat) {
+            _uiState.value = _uiState.value.copy(
+                cat = cat,
+                catAction = CatInfo.getRandomAction(cat.name),
+                messages = emptyList()
+            )
         }
     }
 

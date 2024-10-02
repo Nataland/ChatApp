@@ -1,5 +1,6 @@
 package com.nataland.chatapp.meow
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -14,6 +15,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -35,18 +37,31 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.nataland.chatapp.R
+import com.nataland.chatapp.picker.StoreCat
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeScreen(
-    viewModel: MeowGPTViewModel = hiltViewModel()
+fun MeowGPTScreen(
+    viewModel: MeowGPTViewModel = hiltViewModel(),
+    onAvatarClick: () -> Unit,
 ) {
-    var input by remember { mutableStateOf("") }
+    val state = viewModel.uiState.collectAsState().value
+    val context = LocalContext.current
+    val dataStore = remember { StoreCat(context) }
+    val storedCat = dataStore.getCat.collectAsState(null).value
+    LaunchedEffect(storedCat) {
+        Log.d("Nataland", storedCat?.name.orEmpty())
+        storedCat?.let { viewModel.setCat(it) }
+    }
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -54,9 +69,23 @@ fun HomeScreen(
             TopAppBar(
                 title = {
                     Text(stringResource(R.string.app_name))
+                },
+                actions = {
+                    IconButton(
+                        onClick = onAvatarClick,
+                    ) {
+                        Icon(
+                            painterResource(state.cat.pictureResId),
+                            state.cat.name,
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .clip(CircleShape),
+                            tint = Color.Unspecified,
+                        )
+                    }
                 }
             )
-        }
+        },
     ) { innerPadding ->
         Column(
             Modifier
@@ -64,12 +93,11 @@ fun HomeScreen(
                 .imePadding()
                 .padding(innerPadding)
         ) {
-            val state = viewModel.uiState.collectAsState().value
             val lazyListState = rememberLazyListState()
             var shouldScroll by remember { mutableStateOf(false) }
             LaunchedEffect(state.messages.size, shouldScroll) {
                 if (state.messages.isNotEmpty() || shouldScroll) {
-                    lazyListState.scrollToItem(state.messages.size)
+                    lazyListState.scrollToItem(state.messages.size + 1)
                     shouldScroll = false
                 }
             }
@@ -83,6 +111,17 @@ fun HomeScreen(
                 item {
                     Spacer(Modifier.height(16.dp))
                 }
+                item {
+                    Text(
+                        state.catAction,
+                        modifier = Modifier.fillMaxWidth(),
+                        color = MaterialTheme.colorScheme.secondary,
+                        fontStyle = FontStyle.Italic,
+                        fontSize = 12.sp,
+                        textAlign = TextAlign.Center,
+                    )
+                    Spacer(Modifier.height(24.dp))
+                }
                 items(state.messages) {
                     ChatBubble(it)
                     Spacer(Modifier.height(16.dp))
@@ -92,6 +131,8 @@ fun HomeScreen(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
+                var input by remember { mutableStateOf("") }
+
                 TextField(
                     input,
                     shape = RoundedCornerShape(24.dp),

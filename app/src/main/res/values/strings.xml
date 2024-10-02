@@ -1,4 +1,5 @@
 <resources>
     <string name="app_name">MeowGPT</string>
     <string name="send_button">Send</string>
+    <string name="back">back</string>
 </resources>
